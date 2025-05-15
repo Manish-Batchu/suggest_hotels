@@ -93,7 +93,7 @@ upload_to_elasticsearch(recommendations_list, "final_recommendations2")
 
 def get_recommendations_for_email(index_name,email):
     es = Elasticsearch("http://localhost:9200")
-    # Elasticsearch que to match the email
+    # Elasticsearch query to match the email
     query = {
         "query": {
             "match": {
@@ -102,18 +102,14 @@ def get_recommendations_for_email(index_name,email):
         }
     }
 
-    # Perform the search query on the specified index
     response = es.search(index=index_name, body=query)
 
-    # Check if any results were returned
     if response['hits']['total']['value'] > 0:
         # Get the recommendations from the first hit (assuming only one email match)
         recommendations = response['hits']['hits'][0]['_source']['recommendations']
         return recommendations
     else:
         return "No recommendations found for this email."
-        # 
-    # print(documents)
 
 
 
