@@ -1,21 +1,17 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException, Query
 from elasticsearch import Elasticsearch
 
 app = FastAPI()
 es = Elasticsearch("http://localhost:9200")
 
-es_index_name = "hotels" 
+es_index_name = "hotels"
 
-class EmailRequest(BaseModel):
-    email: str
-
-@app.post("/get_recommendations")
-def get_recommendations_for_email(req: EmailRequest):
+@app.get("/get_recommendations")
+def get_recommendations_for_email(email: str = Query(..., description="User's email address")):
     query = {
         "query": {
             "match": {
-                "email": req.email
+                "email": email
             }
         }
     }
@@ -25,7 +21,7 @@ def get_recommendations_for_email(req: EmailRequest):
     if response['hits']['total']['value'] > 0:
         recommendations = response['hits']['hits'][0]['_source']['recommendations']
         return {
-            "email": req.email,
+            "email": email,
             "recommendations": recommendations
         }
     else:
