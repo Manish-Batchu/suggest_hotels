@@ -35,7 +35,7 @@ user_item_matrix = coo_matrix(user_item_matrix)  # Convert to COO format
 user_item_matrix_csr = user_item_matrix.tocsr()  # Convert to CSR format
 
 
-model = AlternatingLeastSquares(factors=50, regularization=0.5, iterations=100)
+model = AlternatingLeastSquares(factors=10, regularization=0.05, iterations=100)
 
 model.fit(user_item_matrix_csr)
 
@@ -51,7 +51,7 @@ hotel_dict = dict(zip(hotels_df['hotelId'], hotels_df['hotelName']))
 
 def convert_tuple_to_dict(result_tuple):
 
-    result_list = [{"hotelName": hotel_dict.get(hotel_ids_List[int(hotel)]), "score": round(float(score), 3)} for hotel, score in zip(result_tuple[0], result_tuple[1])]
+    result_list = [{"hotelName": hotel_dict.get(hotel_ids_List[int(hotel)]), "score": float(score)} for hotel, score in zip(result_tuple[0], result_tuple[1])]
 
     return result_list
 
@@ -80,6 +80,7 @@ with open(file_path, 'w') as json_file:
 def upload_to_elasticsearch(documents, index_name, es_host="http://localhost:9200"):
 
     es = Elasticsearch(es_host)
+    es.indices.delete(index=index_name)
 
     if not es.indices.exists(index=index_name):
         es.indices.create(index=index_name)
@@ -101,32 +102,9 @@ def upload_to_elasticsearch(documents, index_name, es_host="http://localhost:920
         print (f"Failed to upload documents. Error: {failed}")
 
 
-upload_to_elasticsearch(recommendations_list, "final_recommendations2")
+upload_to_elasticsearch(recommendations_list, "hotels")
 
 
-def get_recommendations_for_email(index_name,email):
-    es = Elasticsearch("http://localhost:9200")
-    # Elasticsearch query to match the email
-    query = {
-        "query": {
-            "match": {
-                "email": email
-            }
-        }
-    }
-
-    response = es.search(index=index_name, body=query)
-
-    if response['hits']['total']['value'] > 0:
-        # Get the recommendations from the first hit (assuming only one email match)
-        recommendations = response['hits']['hits'][0]['_source']['recommendations']
-        return recommendations
-    else:
-        return "No recommendations found for this email."
-
-
-
-print(get_recommendations_for_email("final_recommendations2","vivek.chadha@valorganics.com"))
 
 
 
