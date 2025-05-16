@@ -9,6 +9,19 @@ from elasticsearch import Elasticsearch, helpers
 df = pd.read_csv("./data/hotel_bookings.csv")
 
 
+def convert_to_als_format():
+    df = pd.read_csv("./data/hotel_bookings.csv")
+    #  & (df['brandName'] == 'ginger')
+    filtered_df = df[(df['paymentStatus'] == 'CHARGED') & (df['brandName'] == 'ginger')]
+    booking_counts_df = filtered_df.groupby(['customerEmail', 'hotelId']).size().reset_index(name='booking_count')
+    pivot_df = booking_counts_df.pivot_table(index='customerEmail', columns='hotelId', values='booking_count', aggfunc='sum', fill_value=0)
+    pivot_df.reset_index(inplace=True)
+    output_path = './data/emails_with_hotel_booking_counts.csv'
+    pivot_df.to_csv(output_path, index=False)
+
+convert_to_als_format()
+
+
 # get similar hotels
 df = pd.read_csv('./data/emails_with_hotel_booking_counts.csv')
 hotels_df = pd.read_csv('./data/hotel_bookings.csv')
