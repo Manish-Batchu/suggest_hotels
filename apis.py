@@ -47,4 +47,25 @@ def h2h(hotelname: str = Query(..., description="hotel's name")):
             "similar_hotels": similar_hotels
         }
     else:
-        raise HTTPException(status_code=404, detail="No similar_hotels found for this hotel")    
+        raise HTTPException(status_code=404, detail="No similar hotels found for this hotel")    
+    
+
+@app.get("/related_hotels")
+def h2h(hotelname: str = Query(..., description="hotel's name")):
+    query = {"query": {
+        "term": {
+            "hotel_name.keyword": hotelname
+        }
+    }
+    }
+
+    response = es.search(index="related_hotels", body=query)
+
+    if response['hits']['total']['value'] > 0:
+        similar_hotels = response['hits']['hits'][0]['_source']['related_hotels']
+        return {
+            "hotel_name": hotelname,
+            "similar_hotels": similar_hotels
+        }
+    else:
+        raise HTTPException(status_code=404, detail="No related hotels found for this hotel")      
