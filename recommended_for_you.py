@@ -4,6 +4,8 @@ import numpy as np
 from scipy.sparse import coo_matrix,csr_matrix
 from implicit.als import AlternatingLeastSquares
 from elasticsearch import Elasticsearch, helpers
+from utils import upload_to_elasticsearch
+
 
 
 df = pd.read_csv("./data/hotel_bookings.csv")
@@ -11,7 +13,6 @@ df = pd.read_csv("./data/hotel_bookings.csv")
 
 def convert_to_als_format():
     df = pd.read_csv("./data/hotel_bookings.csv")
-    #  & (df['brandName'] == 'ginger')
     filtered_df = df[(df['paymentStatus'] == 'CHARGED') & (df['brandName'] == 'ginger')]
     booking_counts_df = filtered_df.groupby(['customerEmail', 'hotelId']).size().reset_index(name='booking_count')
     pivot_df = booking_counts_df.pivot_table(index='customerEmail', columns='hotelId', values='booking_count', aggfunc='sum', fill_value=0)
@@ -47,13 +48,6 @@ hotel_indices, scores = recommendations
 emails_List = df['customerEmail'].unique().tolist()
 hotel_ids_List  = df.columns[1:].tolist()
 hotel_dict = dict(zip(hotels_df['hotelId'], hotels_df['hotelName']))
-# print(hotel_dict)
-
-def convert_tuple_to_dict(result_tuple):
-
-    result_list = [{"hotelName": hotel_dict.get(hotel_ids_List[int(hotel)]), "score": float(score)} for hotel, score in zip(result_tuple[0], result_tuple[1])]
-
-    return result_list
 
 recommendations_list = []
 
@@ -61,48 +55,11 @@ for i in range(len(emails_List)):
     recommendations = model.recommend(i, user_item_matrix_csr[i], N=5)
     recommendations_list.append({
         "email": emails_List[i],
-        "recommendations": convert_tuple_to_dict(recommendations)
+        "recommendations":  [{"hotelName": hotel_dict.get(hotel_ids_List[int(hotel)]), "score": float(score)} for hotel, score in zip(recommendations[0], recommendations[1])]
     })
 
 
-file_path = "./data/output.json"
-
-# Write the list of dictionaries to a JSON file
-with open(file_path, 'w') as json_file:
-    json.dump(recommendations_list, json_file, indent=4) 
-
-
-
-
-
-
-
-def upload_to_elasticsearch(documents, index_name, es_host="http://localhost:9200"):
-
-    es = Elasticsearch(es_host)
-    es.indices.delete(index=index_name)
-
-    if not es.indices.exists(index=index_name):
-        es.indices.create(index=index_name)
-    
-    actions = [
-        {
-            "_op_type": "index",  # Action type (use "create" for new records only)
-            "_index": index_name,  # Index name
-            "_source": doc         # Document source
-        }
-        for doc in documents
-    ]
-
-    success, failed = helpers.bulk(es, actions)
-    
-    if success:
-        print (f"Successfully uploaded {success} documents to the index '{index_name}'.")
-    else:
-        print (f"Failed to upload documents. Error: {failed}")
-
-
-upload_to_elasticsearch(recommendations_list, "hotels")
+upload_to_elasticsearch(recommendations_list, "recommended_for_you")
 
 
 

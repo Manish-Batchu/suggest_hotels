@@ -4,7 +4,6 @@ from elasticsearch import Elasticsearch
 app = FastAPI()
 es = Elasticsearch("http://localhost:9200")
 
-es_index_name = "hotels"
 
 @app.get("/get_recommendations")
 def get_recommendations_for_email(email: str = Query(..., description="User's email address")):
@@ -16,7 +15,7 @@ def get_recommendations_for_email(email: str = Query(..., description="User's em
         }
     }
 
-    response = es.search(index=es_index_name, body=query)
+    response = es.search(index="recommended_for_you", body=query)
 
     if response['hits']['total']['value'] > 0:
         recommendations = response['hits']['hits'][0]['_source']['recommendations']
@@ -50,7 +49,7 @@ def h2h(hotelname: str = Query(..., description="hotel's name")):
         raise HTTPException(status_code=404, detail="No similar hotels found for this hotel")    
     
 
-@app.get("/related_hotels")
+@app.get("/get_related_hotels")
 def h2h(hotelname: str = Query(..., description="hotel's name")):
     query = {"query": {
         "term": {
