@@ -1,9 +1,6 @@
 import pandas as pd
-import json
-import numpy as np
 from scipy.sparse import coo_matrix,csr_matrix
 from implicit.als import AlternatingLeastSquares
-from elasticsearch import Elasticsearch, helpers
 from utils import upload_to_elasticsearch
 
 

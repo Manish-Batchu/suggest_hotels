@@ -1,6 +1,5 @@
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
-import pandas as pd
 from utils import upload_to_elasticsearch
 
 df = pd.read_csv('./data/catalog.csv', encoding='ISO-8859-1')

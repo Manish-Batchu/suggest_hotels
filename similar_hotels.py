@@ -1,9 +1,5 @@
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
-import json
-import pandas as pd
-import json
-from elasticsearch import Elasticsearch, helpers
 from utils import upload_to_elasticsearch
 
 # Load data
