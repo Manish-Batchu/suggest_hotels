@@ -51,7 +51,7 @@ def get_related_hotels(target_hotel_name:str):
     
     # Extract and filter similar hotels
     similarities = similarity_df[target_unique_name].copy()
-    filtered_similarities = similarities[similarities >0].sort_values(ascending=False)
+    filtered_similarities = similarities[similarities>0.2].sort_values(ascending=False)
 
     # Convert to DataFrame
     result_df = filtered_similarities.reset_index()
